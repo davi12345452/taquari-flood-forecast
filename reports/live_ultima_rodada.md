@@ -1,23 +1,23 @@
 # Revisão da rodada de 04/11/2026 10:00
 
-Modo: **emissao**. Referência observada: 04/11 10:00 (UTC−3). Emissão registrada em 04/11/2026 11:39:42 local. A antecedência real desconta o tempo desde a observação.
+Modo: **emissao**. Referência observada: 04/11 10:00 (UTC−3). Emissão registrada em 04/11/2026 11:45:04 local. A antecedência real desconta o tempo desde a observação.
 
 Horizontes contados desde a referência da própria estação; chuva e ONS mantêm seus atrasos no treino e na inferência. Alterações de modelo passam por comparação por fase da cheia. A coluna de cota é uma estimativa pontual, não uma cota de pico. Não é sistema de alerta.
 
 | alvo      | motor          |   h | referencia_local   |   observado_cm | previsto_cm   | validade_local   |   antecedencia_real_h | status              |
 |:----------|:---------------|----:|:-------------------|---------------:|:--------------|:-----------------|----------------------:|:--------------------|
-| Muçum     | linear         |   3 | 04/11 10:00        |            333 | —             | 04/11 13:00      |                   1.3 | dados_insuficientes |
-| Muçum     | gbm_delta      |   6 | 04/11 10:00        |            333 | 351.7         | 04/11 16:00      |                   4.3 | estimativa          |
-| Muçum     | gbm_delta      |   9 | 04/11 10:00        |            333 | 349.6         | 04/11 19:00      |                   7.3 | estimativa          |
-| Muçum     | gbm_delta      |  12 | 04/11 10:00        |            333 | 378.2         | 04/11 22:00      |                  10.3 | estimativa          |
-| Encantado | linear         |   3 | 04/11 09:00        |            219 | 216.0         | 04/11 12:00      |                   0.3 | estimativa          |
-| Encantado | ridge_montante |   6 | 04/11 09:00        |            219 | 218.9         | 04/11 15:00      |                   3.3 | estimativa          |
-| Encantado | gbm_delta      |   9 | 04/11 09:00        |            219 | 181.8         | 04/11 18:00      |                   6.3 | estimativa          |
-| Encantado | gbm_delta      |  12 | 04/11 09:00        |            219 | 190.6         | 04/11 21:00      |                   9.3 | estimativa          |
-| Estrela   | linear         |   3 | 04/11 09:00        |           1286 | 1319.0        | 04/11 12:00      |                   0.3 | estimativa          |
-| Estrela   | linear         |   6 | 04/11 09:00        |           1286 | 1331.7        | 04/11 15:00      |                   3.3 | estimativa          |
-| Estrela   | linear         |   9 | 04/11 09:00        |           1286 | 1336.1        | 04/11 18:00      |                   6.3 | estimativa          |
-| Estrela   | linear         |  12 | 04/11 09:00        |           1286 | 1343.3        | 04/11 21:00      |                   9.3 | estimativa          |
+| Muçum     | linear         |   3 | 04/11 10:00        |            333 | —             | 04/11 13:00      |                   1.2 | dados_insuficientes |
+| Muçum     | gbm_delta      |   6 | 04/11 10:00        |            333 | 351.7         | 04/11 16:00      |                   4.2 | estimativa          |
+| Muçum     | gbm_delta      |   9 | 04/11 10:00        |            333 | 349.6         | 04/11 19:00      |                   7.2 | estimativa          |
+| Muçum     | gbm_delta      |  12 | 04/11 10:00        |            333 | 378.2         | 04/11 22:00      |                  10.2 | estimativa          |
+| Encantado | linear         |   3 | 04/11 09:00        |            219 | 216.0         | 04/11 12:00      |                   0.2 | estimativa          |
+| Encantado | ridge_montante |   6 | 04/11 09:00        |            219 | 218.9         | 04/11 15:00      |                   3.2 | estimativa          |
+| Encantado | gbm_delta      |   9 | 04/11 09:00        |            219 | 181.8         | 04/11 18:00      |                   6.2 | estimativa          |
+| Encantado | gbm_delta      |  12 | 04/11 09:00        |            219 | 190.6         | 04/11 21:00      |                   9.2 | estimativa          |
+| Estrela   | linear         |   3 | 04/11 09:00        |           1286 | 1319.0        | 04/11 12:00      |                   0.2 | estimativa          |
+| Estrela   | linear         |   6 | 04/11 09:00        |           1286 | 1331.7        | 04/11 15:00      |                   3.2 | estimativa          |
+| Estrela   | linear         |   9 | 04/11 09:00        |           1286 | 1336.1        | 04/11 18:00      |                   6.2 | estimativa          |
+| Estrela   | linear         |  12 | 04/11 09:00        |           1286 | 1343.3        | 04/11 21:00      |                   9.2 | estimativa          |
 
 ## Faixas e diagnóstico
 
@@ -61,7 +61,7 @@ Referências a partir de 03/11 10:00; somente alvos já observados. Horizontes m
 
 Os candidatos são escolhidos em 2023–2024, confirmados em 2025 e podem ser vetados por regressão em 2026. A comparação completa está em [melhoria e aceitação](12_melhoria_live.md). O replay assume atrasos fixos e não recompõe a publicação real de cada fonte.
 
-Arquivo local da execução: `data/processed/live_runs/emissao_20261104T143942065156Z`. Contém previsões, replay, features, datasets de treino, código e configuração.
+Arquivo local da execução: `data/processed/live_runs/emissao_20261104T144504073223Z`. Contém previsões, replay, features, datasets de treino, código e configuração.
 
 ## Emissões reais conferidas
 
