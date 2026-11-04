@@ -35,7 +35,8 @@ def test_persistencia_fase_e_deduplicacao(tmp_path):
     (tmp_path / "replay_20260928T070000000000Z").mkdir()
 
     prev = placar.carregar_emissoes(tmp_path)
-    assert len(prev) == 2  # um operacional, um cenário
+    # Operacional, cenário e o combinado derivado deles.
+    assert sorted(prev.produto) == ["cenario", "combinado", "operacional"]
     assert prev.loc[prev.produto == "operacional", "previsto_cm"].item() == 620.0
 
     pares = placar.parear(prev, _obs(), pd.Timestamp("2026-10-01", tz="UTC"))

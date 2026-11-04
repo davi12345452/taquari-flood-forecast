@@ -27,6 +27,7 @@ import pandas as pd
 
 from ..core import storage
 from ..ingest.common import ROOT
+from . import combinado
 from .operational import ALVOS
 
 PROCESSED = ROOT / "data" / "processed"
@@ -69,6 +70,12 @@ def carregar_emissoes(pasta: Path = PROCESSED / "live_runs") -> pd.DataFrame:
             c = c.assign(produto="cenario", execucao=run.name)
             partes.append(c[["execucao", "produto", "motor", "cenario", "codigo", "h",
                              "t_ref_utc", "valido_para_utc", "emitido_em_utc", "previsto_cm"]])
+    comb = combinado.historico(pasta)
+    if not comb.empty:
+        # Regra aplicada a posteriori sobre os arquivos de cada emissão.
+        comb = comb.assign(produto="combinado", motor="combinado", cenario=comb["fonte"])
+        partes.append(comb[["execucao", "produto", "motor", "cenario", "codigo", "h",
+                            "t_ref_utc", "valido_para_utc", "emitido_em_utc", "previsto_cm"]])
     if not partes:
         return pd.DataFrame()
     todas = pd.concat(partes, ignore_index=True)
@@ -146,7 +153,7 @@ def pareado(pares: pd.DataFrame) -> pd.DataFrame:
     """
     k = ["execucao", "alvo", "valido_para_utc"]
     op = pares[pares["produto"] == "operacional"][k + ["motor", "erro_cm"]]
-    ce = pares[pares["produto"] == "cenario"][k + ["motor", "cenario", "erro_cm"]]
+    ce = pares[pares["produto"] != "operacional"][k + ["motor", "cenario", "erro_cm"]]
     j = op.merge(ce, on=k, suffixes=("_op", "_cen"))
     if j.empty:
         return pd.DataFrame()
