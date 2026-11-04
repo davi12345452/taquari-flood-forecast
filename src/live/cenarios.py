@@ -260,6 +260,8 @@ def referencia(frame: pd.DataFrame, base: list[str], ap: str, postos: pd.DataFra
 
 
 def cenarios(frame: pd.DataFrame, prev_chuva: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    from . import hidro  # hidro importa constantes deste módulo
+
     disp = features_disponiveis(frame)
     postos = chuva_postos(frame)
     tabela, chuvas = [], []
@@ -271,23 +273,32 @@ def cenarios(frame: pd.DataFrame, prev_chuva: pd.DataFrame) -> tuple[pd.DataFram
         # Horas não vistas antes de t: MERGE quando existe, senão postos.
         for h in HORIZONTES:
             nova = features_cenario(frame, h)
+            hid = hidro.hid_treino(frame, h)
             presentes = [c for c in base if x0[c].notna().all()]
-            treino = treino_antes(ds.join(nova), t, h)
-            modelos = {"gbm": treinar(treino, codigo, h, base + list(nova.columns)),
-                       "ridge": treinar(treino, codigo, h, presentes + list(nova.columns), "ridge")}
+            treino = treino_antes(ds.join(nova).join(hid), t, h)
+            # Chuva propagada nos dois motores (reports/19_experimento_subida.md).
+            entradas = list(nova.columns) + list(hid.columns)
+            modelos = {"gbm": treinar(treino, codigo, h, base + entradas),
+                       "ridge": treinar(treino, codigo, h, presentes + entradas, "ridge")}
             horas_passadas = pd.date_range(t - pd.Timedelta(hours=LATENCIA), periods=LATENCIA, freq="h")
             horas_futuras = pd.date_range(t, periods=h, freq="h")
-            cenas = {"sem mais chuva": {u: 0.0 for u in UNIDADES}}
+            horarias = {"sem mais chuva": {u: pd.Series(0.0, index=horas_futuras) for u in UNIDADES}}
             for m, g in prev_chuva.groupby("modelo"):
-                cenas[m] = {u: g[g.unidade == u].set_index("hora_utc").mm.reindex(horas_futuras).sum(min_count=h)
-                            for u in UNIDADES}
+                horarias[m] = {u: g[g.unidade == u].set_index("hora_utc").mm.reindex(horas_futuras)
+                               for u in UNIDADES}
+            cenas = {c: {u: s.sum(min_count=h) for u, s in por_u.items()}
+                     for c, por_u in horarias.items()}
             for cena, futura in cenas.items():
                 x = x0.copy()
+                for nome_hid, v in hidro.hid_no_instante(frame, postos, horarias[cena], t, h).items():
+                    x[nome_hid] = v
                 for u in UNIDADES:
                     merge = chuva_por_hora(frame[f"chuva_{u}_1h"]).reindex(horas_passadas)
                     x[f"nova_passada_{u}"] = merge.fillna(postos[u].reindex(horas_passadas)).sum(min_count=LATENCIA)
                     x[f"nova_futura_{u}"] = futura[u]
-                completa = x.filter(regex="^nova_").notna().all(axis=None)
+                # A chuva propagada pode faltar (lacuna no MERGE): o GBM lida com
+                # NaN e a Ridge sai vazia, e o combinado cai para o GBM.
+                completa = x.filter(regex="^nova_(passada|futura)_").notna().all(axis=None)
                 for motor, modelo in modelos.items():
                     valor = prever(modelo, x, codigo)[0] if completa else np.nan
                     tabela.append({"alvo": nome, "codigo": codigo, "h": h, "cenario": cena, "motor": motor,

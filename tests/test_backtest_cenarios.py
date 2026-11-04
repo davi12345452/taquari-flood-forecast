@@ -79,3 +79,20 @@ def test_comparar_pareado_exige_todos_os_produtos():
     ])
     out = bt.comparar_pareado(res, ["a", "b"])
     assert set(out.t_ref_utc) == {T0}
+
+
+def test_chuva_propagada_estado_estacionario():
+    from src.live.hidro import hid_features
+    idx = pd.date_range("2024-01-01", periods=400, freq="h", tz="UTC")
+    um = pd.Series(1.0, index=idx)
+    # Chuva constante e prevista igual: armazenamento estável, aumento ~0.
+    x = hid_features(um, um, um, 12, "antas")
+    assert x["nova_hid_antas_6"].iloc[300] == pytest.approx(0.0, abs=1e-9)
+    # Sem chuva futura: o armazenamento esvazia como a^h − 1.
+    x = hid_features(um, um, pd.Series(0.0, index=idx), 12, "antas")
+    assert x["nova_hid_antas_24"].iloc[300] == pytest.approx(np.exp(-12 / 24) - 1, rel=1e-6)
+    # Lacuna no MERGE invalida o estado (nunca vira zero).
+    buraco = um.copy()
+    buraco.iloc[250] = np.nan
+    x = hid_features(buraco, um, um, 12, "antas")
+    assert np.isnan(x["nova_hid_antas_6"].iloc[262])
