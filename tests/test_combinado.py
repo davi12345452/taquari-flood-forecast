@@ -45,7 +45,14 @@ def test_linear_no_curto_e_media_das_medianas_no_resto():
     assert out.loc[(ES, 12), "fonte"].startswith("cenários")
 
 
-def test_sem_um_dos_motores_nao_publica():
+def test_sem_gbm_nao_publica_e_sem_ridge_usa_gbm():
+    vazio = pd.DataFrame(columns=["motor", "h", "previsto_cm"])
     cen = pd.DataFrame([_cen(MU, "Muçum", 12, "ICON", "ridge", 1200.0),
                         _cen(MU, "Muçum", 12, "ICON", "gbm", float("nan"))])
-    assert combinar(pd.DataFrame(columns=["motor", "h", "previsto_cm"]), cen).empty
+    assert combinar(vazio, cen).empty
+    cen = pd.DataFrame([_cen(MU, "Muçum", 12, "ICON", "ridge", float("nan")),
+                        _cen(MU, "Muçum", 12, "GFS", "gbm", 1100.0),
+                        _cen(MU, "Muçum", 12, "ICON", "gbm", 1140.0)])
+    out = combinar(vazio, cen)
+    assert out.previsto_cm.item() == 1120.0
+    assert "ridge indisponível" in out.fonte.item()

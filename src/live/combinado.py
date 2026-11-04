@@ -8,13 +8,15 @@ Regra fixa (Fase 11, reports/17_produto_combinado.md):
   como mediana dos modelos meteorológicos (ECMWF, GFS, ICON, GEM). A Ridge
   acerta melhor o pico e o GBM a recessão; a média reduz o erro nas três fases
   sem precisar detectar a fase em tempo real.
+- sem Ridge (entrada ausente), o GBM puro (v2, após o backtest).
 - envelope: mínimo e máximo de todos os membros com chuva prevista, mais o
   cenário "sem mais chuva" como referência inferior. Não é intervalo de
   confiança.
 
-A regra foi escolhida com os pares de set/2026 (seleção dentro da amostra).
-Só um evento novo ou um backtest com previsões de chuva arquivadas confirma
-o ganho. Não é sistema de alerta.
+A regra foi escolhida com os pares de set/2026. No backtest fora da amostra
+(reports/18_backtest.md, 2024–2026) ela empata com o operacional em 6–12h e
+acrescenta 18–24h; o ganho de setembro não se generaliza. Não é sistema de
+alerta.
 """
 
 from __future__ import annotations
@@ -56,16 +58,21 @@ def combinar(operacional: pd.DataFrame, cenarios: pd.DataFrame) -> pd.DataFrame:
             continue
         chuva = g[g["cenario"] != SECO]
         med = chuva.groupby("motor")["previsto_cm"].median()
-        if not {"ridge", "gbm"} <= set(med.index):
+        if "gbm" not in med.index or pd.isna(med["gbm"]):
             continue
+        # v2: sem Ridge (régua de montante fora, por exemplo), vale o GBM puro.
+        # No backtest de 2024–2026 a v1 cobriu só 20% das horas altas de mai/2024.
+        ridge = med.get("ridge", float("nan"))
+        fonte = ("cenários (média ridge+gbm, mediana NWP)" if pd.notna(ridge)
+                 else "cenários (gbm, mediana NWP; ridge indisponível)")
         seco = g.loc[g["cenario"] == SECO, "previsto_cm"]
         linhas.append({"alvo": ALVOS[codigo][0], "codigo": codigo, "h": h,
-                       "fonte": "cenários (média ridge+gbm, mediana NWP)",
+                       "fonte": fonte,
                        "t_ref_utc": g["t_ref_utc"].iloc[0],
                        "valido_para_utc": g["valido_para_utc"].iloc[0],
                        "nivel_em_t": g["nivel_em_t"].iloc[0],
-                       "previsto_cm": (med["ridge"] + med["gbm"]) / 2,
-                       "ridge_cm": med["ridge"], "gbm_cm": med["gbm"],
+                       "previsto_cm": (ridge + med["gbm"]) / 2 if pd.notna(ridge) else med["gbm"],
+                       "ridge_cm": ridge, "gbm_cm": med["gbm"],
                        "envelope_inf_cm": chuva["previsto_cm"].min(),
                        "envelope_sup_cm": chuva["previsto_cm"].max(),
                        "sem_chuva_cm": seco.mean() if not seco.empty else float("nan"),

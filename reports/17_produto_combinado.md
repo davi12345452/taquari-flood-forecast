@@ -5,6 +5,13 @@ Data: 04/11/2026. Código: `src/live/placar.py`, `src/live/combinado.py`,
 
 Não é sistema de alerta (ver `LIMITACOES.md`).
 
+> **Atualização (04/11, backtest fora da amostra, `reports/18_backtest.md`):** o
+> ganho de setembro **não se generaliza**. Em 8 cheias de 2024–2026, com treino
+> só no passado e a chuva prevista que estava arquivada, o combinado empata com
+> o operacional em 6–12h (12h: MAE 82 contra 83 cm; ganha em 5 de 8 eventos,
+> perde em mai/2024, jun/2025 e em Estrela). O que ele acrescenta de fato é
+> 18–24h (skill ~0,50) e menos viés. A seção 5 resume o backtest.
+
 ## 1. O que o placar mostrou
 
 4.399 pares previsto × observado de 33 emissões reais das cheias de 21/09 e
@@ -84,11 +91,7 @@ Nearing et al. Nature 627 2024.
 
 ## 4. Próximos passos, em ordem
 
-1. **Backtest fora da amostra com previsão de chuva arquivada.** A previous
-   runs API do Open-Meteo devolve, para 2024 em diante, a previsão emitida
-   ~24h antes nos quatro modelos (verificado para 29/04–01/05/2024). Isso
-   permite rodar os cenários nas cheias de 2024–2025 como se fossem ao vivo,
-   confirmar ou derrubar a regra combinada e medir o viés da chuva prevista.
+1. ~~Backtest fora da amostra com previsão de chuva arquivada.~~ Feito: seção 5.
 2. **Recessão:** corrigir a superestimação dos cenários. Candidatos: AR(1) no
    erro recente (ERRIS), mais forte em 3–6h, e um membro de recessão
    exponencial.
@@ -97,3 +100,41 @@ Nearing et al. Nature 627 2024.
    resíduo.
 4. **9h nos cenários** (hoje só 6/12/18/24) e faixas por regressão quantílica.
 5. **Automação** do ciclo atualizar → emitir → cenários → combinado → placar.
+
+## 5. Backtest fora da amostra (2024–2026)
+
+`src/live/backtest_cenarios.py` refaz hora a hora o que os cenários teriam
+publicado em oito cheias (mai/2024, jun/2024, out/2024, jun/2025, set/2025,
+nov/2025, jun/2026, jul/2026). Treino só com janelas anteriores a cada evento,
+latências do operacional, chuva de latência pelos postos ANA e chuva futura
+pela previsão arquivada no Open-Meteo (rodada mais recente, D0, e de ~24h
+antes, D1). Regime alto apenas.
+
+1. **Cobertura.** A regra publicada exigia a Ridge, que não sai sem as
+   réguas de montante. Em mai/2024 (José Júlio fora) ela cobriu 20% das horas
+   altas. A v2 cai para o GBM puro e cobre 100%; o operacional cobriu 83–90%
+   em 2024. Adotada no live.
+2. **Precisão em 6–12h:** empate com o operacional nos mesmos instantes
+   (6h: 34 × 35 cm; 12h: 82 × 83 cm). Por evento, ganha em set/2025 (31 × 53),
+   nov/2025 (63 × 80), jun/2026 e jul/2026 (86 × 104); perde em mai/2024
+   (133 × 119) e jun/2025 (88 × 77).
+3. **A chuva prevista não é o gargalo.** Com a chuva observada no lugar da
+   prevista (chuva perfeita), o erro é o mesmo em 12h (85 cm). D0 e D1 dão
+   resultados quase iguais. Sem mais chuva o erro de 24h sobe de ~160 para
+   ~190 cm: a chuva prevista ajuda em 18–24h, mas o limite está no modelo
+   hidrológico.
+4. **A subestimação das subidas é estrutural:** viés −95 cm na subida e −78 no
+   pico mesmo com chuva perfeita. Mai/2024, recorde fora do treino, fica com
+   skill 0,25–0,38 em qualquer produto.
+5. **Barragens.** Tirar a defluência da CERAN do GBM muda o MAE em 0–3 cm;
+   deixar a Ridge usar a defluência melhora 1–6 cm em 5 de 8 eventos. A
+   defluência da 14 de Julho replica a vazão em José Júlio (r = 0,998), então
+   com a régua funcionando ela é redundante; o valor está em cobrir falhas
+   da régua.
+6. **Ridge × GBM:** fora de setembro, a Ridge é pior em 18–24h (184–200 contra
+   156–170 cm). Mesmo assim a média dos dois tem menos viés e erro menor ou
+   igual ao GBM sozinho em 6–18h, por isso fica.
+
+Próximo alvo, revisto: a estrutura do modelo na subida (componente físico de
+propagação da CERAN e de José Júlio, perda com peso em subidas, treino com
+mai/2024 excluído só do teste), sempre medida neste backtest.

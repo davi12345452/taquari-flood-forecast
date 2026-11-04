@@ -94,9 +94,11 @@ class RidgeChuva:
     Sem imputação: só usa linhas com todas as entradas presentes.
     """
 
-    def __init__(self, cols: list[str], propria: str):
+    def __init__(self, cols: list[str], propria: str, extras: tuple[str, ...] = ()):
+        # extras: prefixos adicionais aceitos (ex.: defluência das UHEs no backtest).
         self.propria = propria
-        self.feature_name_ = [c for c in cols if c.startswith(("nivel_", "dnivel_", "nova_"))
+        prefixos = ("nivel_", "dnivel_", "nova_", *extras)
+        self.feature_name_ = [c for c in cols if c.startswith(prefixos)
                               or c in {f"chuva_{u}_24h" for u in UNIDADES}]
         self.modelo = make_pipeline(StandardScaler(), Ridge(alpha=10.0))
 
@@ -126,6 +128,8 @@ def treinar(train: pd.DataFrame, codigo: int, h: int, cols: list[str], motor: st
     train[alvo] = train[alvo] - train[propria]
     if motor == "ridge":
         return RidgeChuva(cols, propria).fit(train, train[alvo])
+    if motor == "ridge_barr":
+        return RidgeChuva(cols, propria, extras=("defluente_",)).fit(train, train[alvo])
     cfg = load_config("model")
     tr, ev = gbm._split_early_stopping(train, cfg["valid_frac_janelas"])
     modelo = lgb.LGBMRegressor(**(cfg["lgbm"] | {"n_jobs": 4, "random_state": 42}))

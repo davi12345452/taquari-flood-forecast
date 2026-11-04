@@ -1,6 +1,6 @@
 # Placar das emissões reais
 
-Gerado em 04/11/2026 11:41 (UTC−3) por `src/live/placar.py`. 4399 pares previsto × observado de 36 emissões, em 2 eventos. Só entram números gravados antes da observação; replays não contam. Reexecuções com a mesma referência contam uma vez (a primeira).
+Gerado em 04/11/2026 12:05 (UTC−3) por `src/live/placar.py`. 4399 pares previsto × observado de 36 emissões, em 2 eventos. Só entram números gravados antes da observação; replays não contam. Reexecuções com a mesma referência contam uma vez (a primeira).
 
 `skill` = 1 − MAE/MAE da persistência nos mesmos pares: 1 é perfeito, 0 empata com repetir a cota atual, negativo é pior. `fase` é relativa ao máximo observado do alvo no evento (pico = ±3h).
 
